@@ -1,29 +1,42 @@
-package dao;
+package petrov.dao;
 
 
-import entity.Employee;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.query.Query;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
+import petrov.entity.User;
 
 import java.util.List;
 @Repository
-public class EmployeeDaoImpl implements EmployeeDao {
-    @Autowired
-    private SessionFactory sessionFactory;
+public class EmployeeDaoImpl implements petrov.dao.EmployeeDao {
+    @PersistenceContext()
+    private EntityManager entityManager;
 
     @Override
-    @Transactional
-    public List<Employee> getAllEmployees() {
+    public List<User> getAllEmployees() {
+        return entityManager.createQuery("from User", User.class).getResultList();
+    }
 
-        Session session = sessionFactory.getCurrentSession();
+    @Override
+    public void saveEmployee(User employee) {
+        if(employee.getId() == 0) {
+            entityManager.persist(employee);
+        } else {
+            entityManager.merge(employee);
+        }
+        entityManager.close();
+    }
 
-        Query<Employee> query = session.createQuery("from Employee", Employee.class);
-        List<Employee> allEmployee = query.getResultList();
-        return allEmployee;
+    @Override
+    public User getEmployee(int id) {
+        return entityManager.find(User.class, id);
+    }
 
+    @Override
+    public void deleteEmployee(int id) {
+        User user = entityManager.find(User.class, id);
+        if (user != null) {
+            entityManager.remove(user);
+        }
     }
 }
